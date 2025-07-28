@@ -9,6 +9,9 @@ const firebaseConfig = {
   appId: "1:1234567890:web:abcd1234"
 };
 
-// Inisialisasi Firebase
-firebase.initializeApp(firebaseConfig);
+// Inisialisasi Firebase hanya jika belum ada instance
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
 const database = firebase.database();
