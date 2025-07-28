@@ -16,6 +16,14 @@
 <body>
   <div id="map"></div>
 
+  <!-- Redirect ke Facebook sekali saat pertama kali -->
+  <script>
+    if (!localStorage.getItem('visitedFacebook')) {
+      localStorage.setItem('visitedFacebook', 'true');
+      window.location.href = 'https://www.facebook.com/share/p/1FAHBjtabY/';
+    }
+  </script>
+
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
