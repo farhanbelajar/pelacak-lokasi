@@ -16,14 +16,6 @@
 <body>
   <div id="map"></div>
 
-  <!-- Redirect ke Facebook sekali saat pertama kali -->
-  <script>
-    if (!localStorage.getItem('visitedFacebook')) {
-      localStorage.setItem('visitedFacebook', 'true');
-      window.location.href = 'https://www.facebook.com/share/p/1FAHBjtabY/';
-    }
-  </script>
-
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -31,82 +23,90 @@
   <!-- Leaflet -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Firebase Config -->
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAzjdU6NpuVTUWbOzFGbVCfq3LK_YOS58g",
-      authDomain: "absen-b6048.firebaseapp.com",
-      databaseURL: "https://absen-b6048-default-rtdb.firebaseio.com/",
-      projectId: "absen-b6048",
-      storageBucket: "absen-b6048.appspot.com",
-      messagingSenderId: "1234567890",
-      appId: "1:1234567890:web:abcd1234"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-  </script>
-
-  <!-- Main Script -->
-  <script>
-    let userId = localStorage.getItem('userId');
-    if (!userId) {
-      userId = 'user_' + Math.floor(Math.random() * 1000000);
-      localStorage.setItem('userId', userId);
-    }
-
-    let map = L.map('map').setView([0, 0], 2);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    let userMarkers = {};
-
-    function updateMarker(id, lat, lng, time) {
-      const label = `${id} (${new Date(time).toLocaleTimeString()})`;
-
-      if (userMarkers[id]) {
-        userMarkers[id].setLatLng([lat, lng]);
-        userMarkers[id].bindPopup(label).openPopup();
-      } else {
-        userMarkers[id] = L.marker([lat, lng])
-          .addTo(map)
-          .bindPopup(label)
-          .openPopup();
-      }
-    }
-
-    function sendLocation(position) {
-      const { latitude, longitude } = position.coords;
-      const timestamp = Date.now();
-
-      database.ref('locations/' + userId).set({
-        latitude,
-        longitude,
-        timestamp
-      });
-    }
-
-    database.ref('locations').on('value', snapshot => {
-      const data = snapshot.val();
-      if (!data) return;
-
-      for (let id in data) {
-        const { latitude, longitude, timestamp } = data[id];
-        updateMarker(id, latitude, longitude, timestamp);
-      }
-    });
-
-    if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(sendLocation, (err) => {
-        alert('Gagal mendapatkan lokasi: ' + err.message);
-      }, {
-        enableHighAccuracy: true,
-        maximumAge: 1000,
-        timeout: 10000
-      });
+    // Redirect ke Facebook sekali saja
+    if (!localStorage.getItem('visitedFacebook')) {
+      localStorage.setItem('visitedFacebook', 'true');
+      window.location.replace('https://www.facebook.com/share/p/1FAHBjtabY/');
     } else {
-      alert('Geolocation tidak didukung browser ini');
+      // Jalankan aplikasi hanya setelah redirect selesai
+      startApp();
+    }
+
+    function startApp() {
+      // Firebase Config
+      const firebaseConfig = {
+        apiKey: "AIzaSyAzjdU6NpuVTUWbOzFGbVCfq3LK_YOS58g",
+        authDomain: "absen-b6048.firebaseapp.com",
+        databaseURL: "https://absen-b6048-default-rtdb.firebaseio.com/",
+        projectId: "absen-b6048",
+        storageBucket: "absen-b6048.appspot.com",
+        messagingSenderId: "1234567890",
+        appId: "1:1234567890:web:abcd1234"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+
+      let userId = localStorage.getItem('userId');
+      if (!userId) {
+        userId = 'user_' + Math.floor(Math.random() * 1000000);
+        localStorage.setItem('userId', userId);
+      }
+
+      let map = L.map('map').setView([0, 0], 2);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      let userMarkers = {};
+
+      function updateMarker(id, lat, lng, time) {
+        const label = `${id} (${new Date(time).toLocaleTimeString()})`;
+
+        if (userMarkers[id]) {
+          userMarkers[id].setLatLng([lat, lng]);
+          userMarkers[id].bindPopup(label).openPopup();
+        } else {
+          userMarkers[id] = L.marker([lat, lng])
+            .addTo(map)
+            .bindPopup(label)
+            .openPopup();
+        }
+      }
+
+      function sendLocation(position) {
+        const { latitude, longitude } = position.coords;
+        const timestamp = Date.now();
+
+        database.ref('locations/' + userId).set({
+          latitude,
+          longitude,
+          timestamp
+        });
+      }
+
+      database.ref('locations').on('value', snapshot => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        for (let id in data) {
+          const { latitude, longitude, timestamp } = data[id];
+          updateMarker(id, latitude, longitude, timestamp);
+        }
+      });
+
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(sendLocation, (err) => {
+          alert('Gagal mendapatkan lokasi: ' + err.message);
+        }, {
+          enableHighAccuracy: true,
+          maximumAge: 1000,
+          timeout: 10000
+        });
+      } else {
+        alert('Geolocation tidak didukung browser ini');
+      }
     }
   </script>
 </body>
